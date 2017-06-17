@@ -21,18 +21,20 @@ import br.com.alura.loja.modelo.Produto;
 public class ClienteTest {
 	
 	private HttpServer server;
+	private Client client;
+	private WebTarget target;
 	
 	@Before
 	public void startServer(){
 		server = Servidor.inicializaServidor();
+		client = ClientBuilder.newClient();
+		target = client.target("http://localhost:8080/");
 		
 	}
 	
 	@Test
 	public void testaConexaoComServidor(){
 		
-		Client client = ClientBuilder.newClient();
-		WebTarget target = client.target("http://localhost:8080/");
 		String conteudo = target.path("carrinhos/1").request().get(String.class);
 		Carrinho carrinho = (Carrinho) new XStream().fromXML(conteudo);
 		Assert.assertEquals("Rua Vergueiro 3185, 8 andar",carrinho.getRua());
@@ -42,9 +44,7 @@ public class ClienteTest {
 	@Test
 	public void testaCriacaoDeCarrinho(){
 		
-		Client client = ClientBuilder.newClient();
-        WebTarget target = client.target("http://localhost:8080");
-        
+       
 		Carrinho carrinho = new Carrinho();
     	carrinho.adiciona(new Produto(314L, "Tablet", 999, 1));
     	carrinho.setRua("Rua Vergueiro");
@@ -54,7 +54,14 @@ public class ClienteTest {
     	 Entity<String> entity = Entity.entity(xml, MediaType.APPLICATION_XML);
 
          Response response = target.path("/carrinhos").request().post(entity);
-         Assert.assertEquals("<status>Sucesso</status>", response.readEntity(String.class));
+
+         Assert.assertEquals(201,response.getStatus());
+         String location = response.getHeaderString("Location");
+         System.out.println(location);
+         String conteutdo = client.target("http://"+location).request().get(String.class);
+         
+         Assert.assertTrue(conteutdo.contains("Tablet"));
+         
 	}
 	
 	@After
