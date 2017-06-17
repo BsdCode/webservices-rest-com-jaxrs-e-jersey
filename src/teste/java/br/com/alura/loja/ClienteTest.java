@@ -40,8 +40,8 @@ public class ClienteTest {
 	@Test
 	public void testaConexaoComServidor(){
 		
-		String conteudo = target.path("carrinhos/1").request().get(String.class);
-		Carrinho carrinho = (Carrinho) new XStream().fromXML(conteudo);
+		Carrinho carrinho = target.path("carrinhos/1").request().get(Carrinho.class);
+		
 		Assert.assertEquals("Rua Vergueiro 3185, 8 andar",carrinho.getRua());
 
 	}
@@ -54,17 +54,16 @@ public class ClienteTest {
     	carrinho.adiciona(new Produto(314L, "Tablet", 999, 1));
     	carrinho.setRua("Rua Vergueiro");
     	carrinho.setCidade("Sao Paulo");
-    	String xml = carrinho.toXML();
-    	
-    	 Entity<String> entity = Entity.entity(xml, MediaType.APPLICATION_XML);
+    	    	
+    	 Entity<Carrinho> entity = Entity.entity(carrinho, MediaType.APPLICATION_XML);
 
          Response response = target.path("/carrinhos").request().post(entity);
 
          Assert.assertEquals(201,response.getStatus());
          String location = response.getHeaderString("Location");
-         String conteutdo = client.target("http://"+location).request().get(String.class);
+         Carrinho carrinhoCarregado = client.target("http://"+location).request().get(Carrinho.class);
          
-         Assert.assertTrue(conteutdo.contains("Tablet"));
+         Assert.assertEquals("Tablet", carrinhoCarregado.getProdutos().get(0).getNome());
          
 	}
 	
